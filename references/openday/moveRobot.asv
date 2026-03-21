@@ -1,0 +1,48 @@
+function moveRobot(n, idx)
+
+
+    host = '192.168.0.100'; % THIS IP ADDRESS MUST BE USED FOR THE REAL ROBOT
+    rtdeport = 30003;
+    vacuumport = 63352;
+    rtde1 = rtde(host,rtdeport);
+    vacuum1 = vacuum(host,vacuumport);
+    vacuum1.setTimeout(100000000000);
+    vacuum1.setTimeout(100009000000);
+
+    % Example of a joint CONFIGURATION
+    row0 = -332;
+    col0 = -390.5;
+    deltaRows = 71;
+    deltaCols = -74;
+    numRows = 4;
+    numCols = 7;
+    [x, y] = getCoordinate(idx, numRows, numCols, deltaRows, deltaCols, row0, col0);
+    pickPositionTop = [x y 50 0.537 3.141 0];
+    pickPositionLow = pickPositionTop; pickPositionLow(3) = 5;
+
+    % Example of a POSE
+    home = [-520 143];
+    home2 = [20 -80 100 -225 -110 -10];
+    home2 = [20 -75 105 -235 -110 -10];
+    place = [-793 -454 590 2.509 1.756 -2.29;...
+        -785 -358 590 2.509 1.756 -2.29;...
+        -785 -282 590 2.509 1.756 -2.29;...
+        -785 -216 590 2.509 1.756 -2.29;...
+        -785 -131 590 2.509 1.756 -2.29;...
+        -785 -55 590 2.509 1.756 -2.29;...
+        -785 24 590 2.509 1.756 -2.29];
+    % rtde1.movel(deg2rad(home),'joint');
+    rtde1.movel(pickPositionTop,'pose');
+    rtde1.movel(pickPositionLow,'pose');
+    vacuum1.grip();
+    rtde1.movel(pickPositionTop,'pose');
+    % rtde1.movel(deg2rad(home),'joint');
+    % rtde1.movel((place(n,:)),'pose');
+    % vacuum1.release();
+    % rtde1.movel(deg2rad(home2),'joint');
+
+    %%
+    % Closing the TCP Connection
+    rtde1.close(); 
+    
+end
