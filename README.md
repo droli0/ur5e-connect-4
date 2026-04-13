@@ -54,11 +54,14 @@ From MATLAB at the project root:
 main
 ```
 
-At startup you will be asked:
-1. Autonomous or manual play
-2. Whether to show CV intermediate stages
-3. Who starts the game (robot or opponent)
-4. CV stage delay (seconds, optional)
+At startup you will be asked (invalid text or out-of-range numbers are rejected; press Enter for each default):
+1. Autonomous or manual play (`0` / `1`)
+2. Robot starts first or opponent starts first (`0` / `1`)
+3. Whether to show CV intermediate stages (`0` / `1`)
+4. CV stage delay in seconds (non-negative number)
+5. **Robot color on the board** — `1` if the robot’s pieces are **red** in vision (`matrix` label 1), or `2` if the robot’s pieces are **blue** (label 2). Minimax and win detection use this; the opponent is the other color.
+
+Manual column entry accepts only integers **1–7**; letters, decimals, or out-of-range values get a short error and a new prompt.
 
 If robot is selected as starter, the first turn runs immediately.
 If opponent is selected, the game waits for a detected board change before the robot turn.

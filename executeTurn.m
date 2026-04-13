@@ -1,26 +1,45 @@
 
+% Single source of truth: board state before this robot move (must match vision labels 1=red, 2=blue).
+gameBoard = prevBoard;
+
 column = NaN;
 
 while true
     if AUTO_PLAY
-        [column, ~] = minimax(board, 7, true);
-        if isnan(column) || column < 1
-            error('No valid move was available from minimax.');
+        [column, ~] = minimax(gameBoard, MINIMAX_DEPTH, true, ROBOT_PIECE, OPPONENT_PIECE);
+        validCols = find(gameBoard(1, :) == 0);
+        if isempty(validCols)
+            error('executeTurn:NoMoves', 'No legal columns left; board should have been terminal.');
+        end
+        if isnan(column) || ~ismember(column, validCols)
+            warning('Minimax returned invalid column %s; using first legal column.', mat2str(column));
+            column = validCols(1);
         end
         disp(['Minimax chose column: ', num2str(column)]);
-        break;
     else
         userInput = input('Enter a column for the robot to drop into (1-7): ', 's');
         userInput = strtrim(userInput);
+        if isempty(userInput)
+            disp('Empty input. Enter an integer from 1 through 7.');
+            continue;
+        end
         parsed = str2double(userInput);
-        if ~isempty(parsed) && isfinite(parsed) && parsed >= 1 && parsed <= 7 && parsed == round(parsed)
-            column = round(parsed);
-        else
-            column = NaN;
+        if isnan(parsed) || ~isfinite(parsed)
+            disp('Invalid input (not a number). Enter an integer from 1 through 7, e.g. 4.');
+            continue;
+        end
+        if parsed ~= round(parsed)
+            disp('Enter a whole column number 1-7, not a fraction.');
+            continue;
+        end
+        column = round(parsed);
+        if column < 1 || column > 7
+            disp('Column out of range. Use 1 through 7 only.');
+            continue;
         end
     end
 
-    if isColumnAvailable(column, prevBoard)
+    if isColumnAvailable(column, gameBoard)
         if ~AUTO_PLAY
             fprintf('Manual move selected: %d\n', column);
         end
@@ -28,41 +47,32 @@ while true
     end
 
     if AUTO_PLAY
-        disp("Minimax chose an invalid column. Trying again...");
-    else
-        disp("That column is invalid or full. Choose a different column.");
+        error('executeTurn:MinimaxFullColumn', 'Minimax chose a full column; logic error.');
     end
+    disp('That column is full. Pick a different column (1-7).');
 end
 
 % move robot to grab puck from the shared init/grab pickup pose
-% (cannot name this script initPos.m — that name clashes with the pose vector initPos)
 runPickupSequence;
 
-% assign current drop column and transition positions
 dropCol = colPos(column, :);
 dropTCol = colTPos(column, :);
 
-% move to top transition position
 robot.movej(topPos, 'joint');
 pause(MOVE_STEP_DELAY);
 
-% move to column transition position
 robot.movej(dropTCol, 'joint');
 pause(MOVE_STEP_DELAY);
 
-% move to drop position
 robot.movej(dropCol, 'joint');
 pause(MOVE_STEP_DELAY);
 
-% open gripper (vacuum)
 vacuumGrip.release();
 pause(MOVE_STEP_DELAY);
 
-% move back to column transition position
 robot.movej(dropTCol, 'joint');
 pause(MOVE_STEP_DELAY);
 
-% move back to top transition position
 robot.movej(topPos, 'joint');
 pause(MOVE_STEP_DELAY);
 

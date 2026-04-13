@@ -1,17 +1,28 @@
-function [column, score] = minimax(board, depth, isMaximizing)
-    % MINIMAX - Determines best move for Connect 4 using minimax algorithm
+function [column, score] = minimax(board, depth, isMaximizing, ai_piece, human_piece, alpha, beta)
+    % MINIMAX - Connect 4 search with alpha-beta pruning (internal recursion only).
     % Parameters:
-    %   board - 5x7 matrix where 0=empty, 1=robot(red), 2=opponent(blue)
-    %   depth - Search depth for the algorithm
-    %   isMaximizing - true if maximizing player (robot), false otherwise
+    %   board - 5x7 matrix where 0=empty, 1=red, 2=blue (vision labels)
+    %   depth - Plies remaining before leaf evaluation
+    %   isMaximizing - true for robot's turn, false for opponent's turn
+    %   ai_piece, human_piece - optional (default 1 and 2). ai_piece = robot board value.
+    %   alpha, beta - for pruning; omit on top-level call (uses -Inf / Inf).
     %
     % Returns:
     %   column - Best column to drop piece (1-7)
     %   score - Score of the chosen move
     
-    % Define player pieces
-    ai_piece = 1;      % Robot/AI piece (red)
-    human_piece = 2;   % Human player piece (blue)
+    if nargin < 4 || isempty(ai_piece)
+        ai_piece = 1;
+    end
+    if nargin < 5 || isempty(human_piece)
+        human_piece = 2;
+    end
+    if nargin < 6 || isempty(alpha)
+        alpha = -Inf;
+    end
+    if nargin < 7 || isempty(beta)
+        beta = Inf;
+    end
     
     % Position weights for board evaluation
     position_weights = [
@@ -63,47 +74,45 @@ function [column, score] = minimax(board, depth, isMaximizing)
     end
     
     if isMaximizing
-        % Maximizing player (robot/AI)
         best_score = -Inf;
-        best_column = valid_moves(1); % Default to first valid move
-        
+        best_column = valid_moves(1);
+
         for i = 1:length(valid_moves)
             col = valid_moves(i);
-            % Make the move
             new_board = makeMove(board, col, ai_piece);
-            
-            % Recursive minimax call
-            [~, move_score] = minimax(new_board, depth-1, false);
-            
-            % Update best score
+            [~, move_score] = minimax(new_board, depth-1, false, ai_piece, human_piece, alpha, beta);
+
             if move_score > best_score
                 best_score = move_score;
                 best_column = col;
             end
+            alpha = max(alpha, best_score);
+            if beta <= alpha
+                break;
+            end
         end
-        
+
         column = best_column;
         score = best_score;
     else
-        % Minimizing player (human opponent)
         best_score = Inf;
-        best_column = valid_moves(1); % Default to first valid move
-        
+        best_column = valid_moves(1);
+
         for i = 1:length(valid_moves)
             col = valid_moves(i);
-            % Make the move
             new_board = makeMove(board, col, human_piece);
-            
-            % Recursive minimax call
-            [~, move_score] = minimax(new_board, depth-1, true);
-            
-            % Update best score
+            [~, move_score] = minimax(new_board, depth-1, true, ai_piece, human_piece, alpha, beta);
+
             if move_score < best_score
                 best_score = move_score;
                 best_column = col;
             end
+            beta = min(beta, best_score);
+            if beta <= alpha
+                break;
+            end
         end
-        
+
         column = best_column;
         score = best_score;
     end
