@@ -15,7 +15,7 @@ global robot vacuum visionCamera turnCount totalTime term board prevBoard MOVE_S
 global topPos bottomPos initPos grabPos colTPos colPos;
 
 % Configured in root scripts for readability and performance.
-CAMERA_DEVICE = '/dev/video1';
+CAMERA_DEVICE = '/dev/video0';
 OPPONENT_POLL_DELAY = 1;
 MOVE_STEP_DELAY = 0.1;
 

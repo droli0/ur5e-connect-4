@@ -58,6 +58,24 @@ If opponent is selected, the game waits for a detected board change before the r
 If CV demo is enabled, intermediate frames are shown with the requested delay.  
 If disabled, only the final board rendering is shown.
 
+## Robot setup: recording poses before a full run
+
+To tune or replace the joint poses in `init.m` for your cell layout and pickup point:
+
+1. **Connect from MATLAB** — run `connectRobot.m` once so the global `robot` handle is created (same RTDE session `main` / `init` will use).
+2. **Jog with the teach pendant** — move the arm to each pose you need (standby, pickup hover, grab, each column approach, each drop, and so on).
+3. **Read joint angles in MATLAB** — in the Command Window, after each physical pose:
+
+   ```matlab
+   robot.actualJointPositions
+   ```
+
+   This returns the six actual joint angles in **radians**, matching the vectors already used in `init.m` (`topPos`, `bottomPos`, `initPos`, `grabPos`, `colTPos`, `colPos`).
+
+4. **Copy into `init.m`** — paste each 1×6 row into the appropriate variable. Use `rad2deg(robot.actualJointPositions)` only if you prefer to think in degrees while noting values; the code expects radians in those arrays.
+
+Repeat for every waypoint you need. You do not need to run `main` for this workflow—only `connectRobot.m` plus teach-pendant moves and recording from the terminal.
+
 ## Where to set/adjust variables for another robot
 
 This file is your main setup surface for position and hardware tuning:
