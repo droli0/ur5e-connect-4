@@ -1,6 +1,11 @@
 
 global visionCamera SHOW_CV_DEMO CV_DEMO_DELAY
-persistent arucoWarningShown
+
+% Scripts cannot use persistent; use root appdata for one-shot warning state.
+arucoWarnKey = 'ur5e_connect4_arucoWarningShown';
+if ~isappdata(0, arucoWarnKey)
+    setappdata(0, arucoWarnKey, false);
+end
 
 img = snapshot(visionCamera);
 
@@ -41,9 +46,9 @@ if detected
         pause(CV_DEMO_DELAY);
     end
 else
-    if isempty(arucoWarningShown) || ~arucoWarningShown
+    if ~getappdata(0, arucoWarnKey)
         warning('Aruco markers not detected. Falling back to resized raw frame for board read.');
-        arucoWarningShown = true;
+        setappdata(0, arucoWarnKey, true);
     end
     tformimg = imresize(img, [100 100]);
     if SHOW_CV_DEMO
