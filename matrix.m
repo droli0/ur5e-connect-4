@@ -1,4 +1,9 @@
 
+showCvStages = SHOW_CV_DEMO;
+if exist('CV_QUIET', 'var') && CV_QUIET
+    showCvStages = false;
+end
+
 img = tformimg;
 
 % Extract RGB Channels
@@ -41,7 +46,7 @@ for row = 1:board_rows
     end
 end
 
-if SHOW_CV_DEMO
+if showCvStages
     figure(12);
     clf;
     hold off;
@@ -56,6 +61,6 @@ if SHOW_CV_DEMO
     pause(CV_DEMO_DELAY);
 end
 
-if SHOW_CV_DEMO
+if showCvStages
     disp(board);
 end

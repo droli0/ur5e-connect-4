@@ -6,6 +6,9 @@ debounceThreshold = 3;
 debounceCount = 0;
 lastDetectedBoard = prevBoard;
 
+% No CV figures/pauses while polling — only after debounce confirms.
+CV_QUIET = true;
+
 while true
     transform;
     matrix;
@@ -31,3 +34,9 @@ while true
 
     pause(OPPONENT_POLL_DELAY);
 end
+
+clear CV_QUIET
+
+% Fresh capture with full CV pipeline + board figure (matches post-robot getGameboard).
+getGameboard;
+prevBoard = board;

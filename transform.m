@@ -1,4 +1,11 @@
 
+% When CV_QUIET is true (e.g. opponent debounce polling), skip figures/pauses
+% but still build tformimg for matrix().
+showCvStages = SHOW_CV_DEMO;
+if exist('CV_QUIET', 'var') && CV_QUIET
+    showCvStages = false;
+end
+
 % Scripts cannot use persistent; use root appdata for one-shot warning state.
 arucoWarnKey = 'ur5e_connect4_arucoWarningShown';
 if ~isappdata(0, arucoWarnKey)
@@ -7,7 +14,7 @@ end
 
 img = snapshot(visionCamera);
 
-if SHOW_CV_DEMO
+if showCvStages
     figure(10);
     imshow(img);
     title('Raw camera frame');
@@ -36,7 +43,7 @@ catch
 end
 
 if detected
-    if SHOW_CV_DEMO
+    if showCvStages
         figure(11);
         imshow(tformimg);
         title('Warped board view');
@@ -49,7 +56,7 @@ else
         setappdata(0, arucoWarnKey, true);
     end
     tformimg = imresize(img, [100 100]);
-    if SHOW_CV_DEMO
+    if showCvStages
         figure(11);
         imshow(tformimg);
         title('Fallback frame');
