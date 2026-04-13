@@ -15,6 +15,16 @@ B = img(:,:,3);
 red_mask = (R > 95) & (G < 20) & (B < 40);  % Expanded red range
 blue_mask = (R < 30) & (G < 20) & (B > 60); % Expanded blue range
 
+% Soft scores (0–1) matching the same cutoff directions — for gradient plots only.
+Rd = double(R);
+Gd = double(G);
+Bd = double(B);
+redStrength = max(0, Rd - 95) ./ (255 - 95) .* max(0, 20 - Gd) ./ 20 .* max(0, 40 - Bd) ./ 40;
+blueStrength = max(0, 30 - Rd) ./ 30 .* max(0, 20 - Gd) ./ 20 .* max(0, Bd - 60) ./ (255 - 60);
+redStrength = min(1, redStrength);
+blueStrength = min(1, blueStrength);
+RBdiff = mat2gray(Rd - Bd); % 0–1: darker bluer, brighter redder
+
 % Define board size
 board_rows = 5;
 board_cols = 7;
@@ -52,11 +62,29 @@ if showCvStages
     hold off;
     subplot(1,2,1);
     imshow(red_mask);
-    title('Red threshold mask');
+    title('Red threshold mask (binary)');
     subplot(1,2,2);
     imshow(blue_mask);
-    title('Blue threshold mask');
+    title('Blue threshold mask (binary)');
     hold off;
+    drawnow;
+    pause(CV_DEMO_DELAY);
+
+    % Figure 13: continuous "how red / how blue" from the same rules + R-B axis.
+    figure(13);
+    clf;
+    subplot(2, 2, 1);
+    imshow(img);
+    title('Warped input (RGB)');
+    subplot(2, 2, 2);
+    imshow(RBdiff);
+    title('R minus B (bright = redder, dark = bluer)');
+    subplot(2, 2, 3);
+    imshow(redStrength);
+    title('Soft red score (margins vs red thresholds)');
+    subplot(2, 2, 4);
+    imshow(blueStrength);
+    title('Soft blue score (margins vs blue thresholds)');
     drawnow;
     pause(CV_DEMO_DELAY);
 end
