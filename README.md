@@ -34,7 +34,7 @@ The dispenser indexing logic from earlier multi-position pickup flows is removed
 - `getGameboard.m` / `transform.m` / `matrix.m` / `visualise.m`: board capture and detection pipeline
 - `waitForOpponentMove.m`: debounce-based board-change detection
 - `executeTurn.m`: turn execution (auto and manual selection paths)
-- `initPos.m`: shared pickup/release sequence using vacuum gripper (`initPos`/`grabPos`)
+- `runPickupSequence.m`: shared pickup sequence using vacuum gripper (`initPos`/`grabPos` poses from `init.m`)
 - `minimax.m` / `checkWinCondition.m`: gameplay intelligence and terminal checks
 - `endGame.m`: safe shutdown and final board-state reporting
 
@@ -99,8 +99,8 @@ This file is your main setup surface for position and hardware tuning:
    - `rtdeport`: RTDE control port
    - `vacuumport`: vacuum gripper port
 
-4. `initPos.m`: pickup procedure
-   - Uses `initPos` then `grabPos`; keep this sequence for all puck sources.
+4. `runPickupSequence.m`: pickup procedure (script name must differ from the `initPos` pose vector)
+   - Uses joint poses `initPos` then `grabPos` from `init.m`; keep this sequence for all puck sources.
 
 To retune for another robot:
 1. update pose vectors in `init.m` first,

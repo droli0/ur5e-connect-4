@@ -37,7 +37,8 @@ while true
 end
 
 % move robot to grab puck from the shared init/grab pickup pose
-initPos;
+% (cannot name this script initPos.m — that name clashes with the pose vector initPos)
+runPickupSequence;
 
 % assign current drop column and transition positions
 dropCol = colPos(column, :);
