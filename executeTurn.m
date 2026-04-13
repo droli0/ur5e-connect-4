@@ -1,6 +1,4 @@
 
-global AUTO_PLAY prevBoard colPos colTPos topPos bottomPos board robot vacuum MOVE_STEP_DELAY
-
 column = NaN;
 
 while true
@@ -57,7 +55,7 @@ robot.movej(dropCol, 'joint');
 pause(MOVE_STEP_DELAY);
 
 % open gripper (vacuum)
-vacuum.release();
+vacuumGrip.release();
 pause(MOVE_STEP_DELAY);
 
 % move back to column transition position

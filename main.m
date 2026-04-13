@@ -9,10 +9,7 @@ ROBOT_STARTS = askBinaryChoice('Should the robot start first? (1 = robot, 0 = op
 SHOW_CV_DEMO = askBinaryChoice('Show CV transformation stages? (1 = yes, 0 = board only): ', 1);
 CV_DEMO_DELAY = askDelaySeconds('CV stage delay in seconds (default 0.5): ', 0.5);
 
-%% Global execution state used by helper scripts
-global AUTO_PLAY ROBOT_STARTS SHOW_CV_DEMO CV_DEMO_DELAY OPPONENT_POLL_DELAY CAMERA_DEVICE;
-global robot vacuum visionCamera turnCount totalTime term board prevBoard MOVE_STEP_DELAY;
-global topPos bottomPos initPos grabPos colTPos colPos;
+% Shared state lives in the base workspace; child scripts see the same variables.
 
 % Configured in root scripts for readability and performance.
 CAMERA_DEVICE = '/dev/video0';
@@ -43,14 +40,14 @@ end
 init;
 
 % Initial board capture
-prevBoard = getGameboard();
-board = prevBoard;
+getGameboard;
+prevBoard = board;
 
 %% Main Loop
 isFirstTurn = true;
 while true
     if ~(isFirstTurn && ROBOT_STARTS)
-        waitForOpponentMove(prevBoard);
+        waitForOpponentMove;
     end
 
     [term, isTerminal] = checkTerminalState(prevBoard);
@@ -67,8 +64,8 @@ while true
     fprintf('Turn %d complete. Total time: %.3f seconds\n', turnCount, totalTime);
 
     % Capture new board state after your turn.
-    prevBoard = getGameboard();
-    board = prevBoard;
+    getGameboard;
+    prevBoard = board;
 
     [term, isTerminal] = checkTerminalState(prevBoard);
     if isTerminal

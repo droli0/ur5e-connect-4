@@ -1,6 +1,4 @@
 
-global visionCamera SHOW_CV_DEMO CV_DEMO_DELAY
-
 % Scripts cannot use persistent; use root appdata for one-shot warning state.
 arucoWarnKey = 'ur5e_connect4_arucoWarningShown';
 if ~isappdata(0, arucoWarnKey)

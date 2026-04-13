@@ -1,11 +1,9 @@
 %% connect to robot and vacuum gripper
-global robot vacuum CAMERA_DEVICE visionCamera turnCount
-
 connectRobot;
 
 if turnCount == 0
     try
-        vacuum.release(); % ensure puck source is clear before starting
+        vacuumGrip.release(); % ensure puck source is clear before starting
     catch
         % vacuum object may not yet accept commands.
     end

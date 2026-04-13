@@ -1,4 +1,3 @@
-global robot vacuum
 host = '192.168.0.100'; % THIS IP ADDRESS MUST BE USED FOR THE REAL ROBOT
 rtdeport = 30003;
 vacuumport = 63352;
@@ -10,12 +9,11 @@ if exist('robot', 'var') == 1
     catch
     end
 end
-if exist('vacuum', 'var') == 1
-    clear vacuum;
+if exist('vacuumGrip', 'var') == 1
+    clear vacuumGrip;
 end
 
 robot = rtde(host, rtdeport);
-vacuum = vacuum(host, vacuumport);
-vacuum.setTimeout(100000000000);
-vacuum.setTimeout(100008999999);
-    
+vacuumGrip = vacuum(host, vacuumport);
+vacuumGrip.setTimeout(100000000000);
+vacuumGrip.setTimeout(100008999999);

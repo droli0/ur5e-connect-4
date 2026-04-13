@@ -1,6 +1,4 @@
 
-global robot vacuum bottomPos initPos grabPos MOVE_STEP_DELAY
-
 % Pickup script: must not share a name with the pose vector initPos (init.m),
 % or MATLAB will resolve initPos to the array and never run this file.
 
@@ -14,9 +12,9 @@ pause(MOVE_STEP_DELAY)
 
 % open gripper (vacuum off)
 try
-    vacuum.release();
+    vacuumGrip.release();
 catch ME
-    warning('runPickupSequence:vacuumRelease', 'vacuum.release failed: %s', ME.message);
+    warning('runPickupSequence:vacuumRelease', 'vacuumGrip.release failed: %s', ME.message);
 end
 pause(MOVE_STEP_DELAY);
 
@@ -26,9 +24,9 @@ pause(MOVE_STEP_DELAY)
 
 % close gripper (vacuum on)
 try
-    vacuum.grip();
+    vacuumGrip.grip();
 catch ME
-    warning('runPickupSequence:vacuumGrip', 'vacuum.grip failed: %s', ME.message);
+    warning('runPickupSequence:vacuumGrip', 'vacuumGrip.grip failed: %s', ME.message);
 end
 pause(MOVE_STEP_DELAY);
 

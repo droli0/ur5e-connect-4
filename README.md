@@ -15,6 +15,14 @@ The game loop continuously:
 
 The implementation also includes an optional computer-vision stage visualiser for troubleshooting perception tuning.
 
+### Workspace (no `global`)
+
+`main.m` is a **script** (with local functions at the end for prompts only). Every other game file it calls (`init`, `connectRobot`, `getGameboard`, `transform`, `matrix`, `executeTurn`, …) is also a **script**, so they all read and write the **same base workspace**—the same way a single long demo script would, just split across files.
+
+**Note:** `matrix`, `getGameboard`, and `waitForOpponentMove` are intentionally **not** `function` files, because MATLAB functions get a **private workspace** and would not see `robot`, `board`, `SHOW_CV_DEMO`, etc., unless those values were passed in as arguments.
+
+The gripper handle is named **`vacuumGrip`** so it never shadows the **`vacuum`** class constructor (`vacuumGrip = vacuum(host, port)`).
+
 ### Robot turn flow (single-pickup pose)
 - The robot always returns to the shared vacuum setup:
   - `initPos` = pre-pick hover pose (single shared position above puck pickup point).
@@ -62,7 +70,7 @@ If disabled, only the final board rendering is shown.
 
 To tune or replace the joint poses in `init.m` for your cell layout and pickup point:
 
-1. **Connect from MATLAB** — run `connectRobot.m` once so the global `robot` handle is created (same RTDE session `main` / `init` will use).
+1. **Connect from MATLAB** — run `connectRobot.m` once (from the Command Window is fine). Variables **`robot`** and **`vacuumGrip`** appear in the **base workspace**; read poses with `robot.actualJointPositions` there.
 2. **Jog with the teach pendant** — move the arm to each pose you need (standby, pickup hover, grab, each column approach, each drop, and so on).
 3. **Read joint angles in MATLAB** — in the Command Window, after each physical pose:
 
@@ -98,6 +106,7 @@ This file is your main setup surface for position and hardware tuning:
    - `host`: robot controller IP
    - `rtdeport`: RTDE control port
    - `vacuumport`: vacuum gripper port
+   - Creates **`vacuumGrip = vacuum(host, vacuumport)`** in the workspace (class name stays `vacuum`).
 
 4. `runPickupSequence.m`: pickup procedure (script name must differ from the `initPos` pose vector)
    - Uses joint poses `initPos` then `grabPos` from `init.m`; keep this sequence for all puck sources.
