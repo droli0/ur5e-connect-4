@@ -42,3 +42,14 @@ colPos = [-0.3891   -1.7343    1.7448   -2.7759   -1.1856    1.3688;
     0.3725   -1.4858    1.5073   -2.7898   -1.8995    1.6414;
     0.5182   -1.3631    1.3630   -2.7446   -2.0346    1.7004;
     0.6512   -1.2057    1.1545   -2.6621   -2.1564    1.7613];
+
+% After-drop retreat (per column): move here after vacuum release instead of colTPos,
+% so the arm clears without dragging the puck; tune so the piece falls straight into the slot.
+% Initial copy = colTPos — replace with your measured dropAPos / colAPos from teach pendant.
+colAPos = [-0.4201   -1.7431    1.6802   -3.0809   -1.1635    1.5218;
+    -0.1869   -1.7250    1.6653   -3.0824   -1.3967    1.5214;
+    0.0204   -1.6732    1.6207   -3.0882   -1.6041    1.5213;
+    0.2412   -1.5782    1.5315   -3.0924   -1.8249    1.5215;
+    0.4248   -1.4576    1.4041   -3.0844   -2.0086    1.5218;
+    0.5714   -1.3194    1.2388   -3.0564   -2.1551    1.5220;
+    0.6969   -1.1489    1.0071   -2.9944   -2.2801    1.5221];

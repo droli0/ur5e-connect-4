@@ -57,6 +57,7 @@ runPickupSequence;
 
 dropCol = colPos(column, :);
 dropTCol = colTPos(column, :);
+dropACol = colAPos(column, :);
 
 robot.movej(topPos, 'joint');
 pause(MOVE_STEP_DELAY);
@@ -70,7 +71,8 @@ pause(MOVE_STEP_DELAY);
 vacuumGrip.release();
 pause(MOVE_STEP_DELAY);
 
-robot.movej(dropTCol, 'joint');
+% Retreat to column-specific "after" pose (not dropTCol) so the puck falls cleanly into the board.
+robot.movej(dropACol, 'joint');
 pause(MOVE_STEP_DELAY);
 
 robot.movej(topPos, 'joint');

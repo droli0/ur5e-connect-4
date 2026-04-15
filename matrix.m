@@ -6,41 +6,41 @@ end
 
 img = tformimg;
 
-% Extract RGB Channels
-R = img(:,:,1);
-G = img(:,:,2);
-B = img(:,:,3);
+% RGB thresholds — same numbers drive hard masks and soft heatmaps below.
+Rmin_red = 88;
+Gmax_red = 25;
+Bmax_red = 48;
+Rmax_blue = 30;
+Gmax_blue = 20;
+Bmin_blue = 60;
 
-% Adjust Red and Blue Color Thresholds
-red_mask = (R > 95) & (G < 20) & (B < 40);  % Expanded red range
-blue_mask = (R < 30) & (G < 20) & (B > 60); % Expanded blue range
+R = img(:, :, 1);
+G = img(:, :, 2);
+B = img(:, :, 3);
 
-% Soft scores (0–1) matching the same cutoff directions — for gradient plots only.
+red_mask = (R > Rmin_red) & (G < Gmax_red) & (B < Bmax_red);
+blue_mask = (R < Rmax_blue) & (G < Gmax_blue) & (B > Bmin_blue);
+
 Rd = double(R);
 Gd = double(G);
 Bd = double(B);
-redStrength = max(0, Rd - 95) ./ (255 - 95) .* max(0, 20 - Gd) ./ 20 .* max(0, 40 - Bd) ./ 40;
-blueStrength = max(0, 30 - Rd) ./ 30 .* max(0, 20 - Gd) ./ 20 .* max(0, Bd - 60) ./ (255 - 60);
-redStrength = min(1, redStrength);
-blueStrength = min(1, blueStrength);
-RBdiff = mat2gray(Rd - Bd); % 0–1: darker bluer, brighter redder
+redStrength = min(1, max(0, Rd - Rmin_red) ./ (255 - Rmin_red) .* max(0, Gmax_red - Gd) ./ Gmax_red .* max(0, Bmax_red - Bd) ./ Bmax_red);
+blueStrength = min(1, max(0, Rmax_blue - Rd) ./ Rmax_blue .* max(0, Gmax_blue - Gd) ./ Gmax_blue .* max(0, Bd - Bmin_blue) ./ (255 - Bmin_blue));
+RBdiff = mat2gray(Rd - Bd);
 
-% Define board size
 board_rows = 5;
 board_cols = 7;
 board = zeros(board_rows, board_cols);
 
-% Get image dimensions
 [img_rows, img_cols, ~] = size(img);
 cell_height = round(img_rows / board_rows);
 cell_width = round(img_cols / board_cols);
 
-% Process each cell in the 5x7 grid
 for row = 1:board_rows
     for col = 1:board_cols
-        r_start = (row-1) * cell_height + 1;
+        r_start = (row - 1) * cell_height + 1;
         r_end = min(row * cell_height, img_rows);
-        c_start = (col-1) * cell_width + 1;
+        c_start = (col - 1) * cell_width + 1;
         c_end = min(col * cell_width, img_cols);
 
         red_count = sum(sum(red_mask(r_start:r_end, c_start:c_end)));
@@ -57,36 +57,46 @@ for row = 1:board_rows
 end
 
 if showCvStages
-    figure(12);
+    figure(2);
     clf;
-    hold off;
-    subplot(1,2,1);
-    imshow(red_mask);
-    title('Red threshold mask (binary)');
-    subplot(1,2,2);
-    imshow(blue_mask);
-    title('Blue threshold mask (binary)');
-    hold off;
-    drawnow;
-    pause(CV_DEMO_DELAY);
+    set(gcf, 'Name', 'CV', 'NumberTitle', 'off');
 
-    % Figure 13: continuous "how red / how blue" from the same rules + R-B axis.
-    figure(13);
-    clf;
-    subplot(2, 2, 1);
+    subplot(2, 4, 1);
+    if exist('cvRawImg', 'var') && ~isempty(cvRawImg)
+        imshow(cvRawImg);
+    else
+        imshow(img);
+    end
+    title('Raw');
+
+    subplot(2, 4, 2);
     imshow(img);
-    title('Warped input (RGB)');
-    subplot(2, 2, 2);
+    title('Warped');
+
+    subplot(2, 4, 3);
+    imshow(red_mask);
+    title('Red Mask');
+
+    subplot(2, 4, 4);
+    imshow(blue_mask);
+    title('Blue Mask');
+
+    subplot(2, 4, 5);
     imshow(RBdiff);
-    title('R minus B (bright = redder, dark = bluer)');
-    subplot(2, 2, 3);
+    title('R vs B');
+
+    subplot(2, 4, 6);
     imshow(redStrength);
-    title('Soft red score (margins vs red thresholds)');
-    subplot(2, 2, 4);
+    title('Red Score');
+
+    subplot(2, 4, 7);
     imshow(blueStrength);
-    title('Soft blue score (margins vs blue thresholds)');
+    title('Blue Score');
+
     drawnow;
-    pause(CV_DEMO_DELAY);
+    if exist('CV_DEMO_DELAY', 'var') && CV_DEMO_DELAY > 0
+        pause(CV_DEMO_DELAY);
+    end
 end
 
 if showCvStages

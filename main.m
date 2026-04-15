@@ -7,7 +7,6 @@ close all;
 AUTO_PLAY = askBinaryChoice('Enable autonomous minimax play? (1 = auto, 0 = manual): ', 1);
 ROBOT_STARTS = askBinaryChoice('Should the robot start first? (1 = robot, 0 = opponent): ', 0);
 SHOW_CV_DEMO = askBinaryChoice('Show CV transformation stages? (1 = yes, 0 = board only): ', 1);
-CV_DEMO_DELAY = askDelaySeconds('CV stage delay in seconds (default 0.5): ', 0.5);
 
 ROBOT_PIECE = askRobotPiece( ...
     ['Which color is the robot on the board? Vision uses 1=red, 2=blue. ', ...
@@ -20,6 +19,8 @@ CAMERA_DEVICE = '/dev/video0';
 OPPONENT_POLL_DELAY = 1;
 MOVE_STEP_DELAY = 0.1;
 MINIMAX_DEPTH = 6; % search plies (lower = faster; uses alpha-beta in minimax.m)
+% Optional pause after each CV montage refresh (s). 0 = no wait; use e.g. 0.5 for a slower demo.
+CV_DEMO_DELAY = 0;
 
 turnCount = 0;
 totalTime = 0;
@@ -41,7 +42,7 @@ else
     disp('Robot plays blue (2); opponent plays red (1).');
 end
 if SHOW_CV_DEMO
-    fprintf('Showing CV stages with delay = %.2f s\n', CV_DEMO_DELAY);
+    disp('Showing CV montage on figure 2 (see CV_DEMO_DELAY in main.m for optional pause).');
 else
     disp('Showing final board graphic only.');
 end
@@ -103,25 +104,6 @@ function choice = askBinaryChoice(promptText, defaultValue)
             continue;
         end
         choice = parsed;
-        return;
-    end
-end
-
-function delaySeconds = askDelaySeconds(promptText, defaultValue)
-    while true
-        raw = input(promptText, 's');
-        raw = strtrim(raw);
-        if isempty(raw)
-            delaySeconds = defaultValue;
-            return;
-        end
-
-        parsed = str2double(raw);
-        if isnan(parsed) || ~isfinite(parsed) || parsed < 0
-            disp('Invalid input. Enter a non-negative number (or press Enter for the default).');
-            continue;
-        end
-        delaySeconds = parsed;
         return;
     end
 end

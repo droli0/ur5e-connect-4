@@ -1,121 +1,98 @@
 # ur5e-connect-4
 
-## Overview
+Connect 4 on a physical board: camera → piece detection → UR5e + vacuum gripper. Two play modes: **autonomous** (minimax) or **manual** (column from the MATLAB prompt).
 
-This project runs a complete Connect 4 game loop for a UR5e robot setup with two player modes:
-- **Autonomous mode**: robot chooses moves using a minimax strategy.
-- **Manual mode**: operator enters the robot drop column from the MATLAB console.
+## Start guide
 
-The game loop continuously:
-1. captures the board from the camera,
-2. detects piece positions,
-3. waits for a board change after the opponent move,
-4. executes the chosen move,
-5. updates win/tie state and exits with a board-safe end sequence.
+On **new hardware or a new cell**, work through the sections below in order before relying on a full game run.
 
-The implementation also includes an optional computer-vision stage visualiser for troubleshooting perception tuning.
+### Tuning checklist (new cell / robot)
 
-### Workspace (no `global`)
+1. **`init.m`** — all joint pose rows, especially **`colAPos`** so the puck clears the gripper after release. Use **Recording joint poses** (below) to capture real angles.
+2. **`connectRobot.m`** — controller **`host`**, **`rtdeport`**, **`vacuumport`**.
+3. **`main.m`** — **`CAMERA_DEVICE`**, **`OPPONENT_POLL_DELAY`**, **`MOVE_STEP_DELAY`**, optional **`CV_DEMO_DELAY`** (montage pause; **`0`** = none).
+4. **`matrix.m`** — top-of-file RGB thresholds (`Rmin_red`, `Gmax_red`, …). Enable CV demo at launch and use **figure 2** to compare masks to lighting; relax if red is missed, tighten if colours swap.
+5. **`main.m`** again — confirm **`MINIMAX_DEPTH`** if autonomous play feels too slow or too shallow.
+6. Run **manual mode** (`0` at the play-mode prompt) before autonomous.
 
-`main.m` is a **script** (with local functions at the end for prompts only). Every other game file it calls (`init`, `connectRobot`, `getGameboard`, `transform`, `matrix`, `executeTurn`, …) is also a **script**, so they all read and write the **same base workspace**—the same way a single long demo script would, just split across files.
+### Recording joint poses for `init.m`
 
-**Note:** `matrix`, `getGameboard`, and `waitForOpponentMove` are intentionally **not** `function` files, because MATLAB functions get a **private workspace** and would not see `robot`, `board`, `SHOW_CV_DEMO`, etc., unless those values were passed in as arguments.
-
-The gripper handle is named **`vacuumGrip`** so it never shadows the **`vacuum`** class constructor (`vacuumGrip = vacuum(host, port)`).
-
-### Robot turn flow (single-pickup pose)
-- The robot always returns to the shared vacuum setup:
-  - `initPos` = pre-pick hover pose (single shared position above puck pickup point).
-  - `grabPos` = lower grab pose (single shared pose to engage suction).
-- After pickup it always executes:
-  - move above target column (`colTPos(column,:)`)
-  - lower into target drop cell (`colPos(column,:)`)
-  - release suction
-  - return through `colTPos` to `topPos`
-
-The dispenser indexing logic from earlier multi-position pickup flows is removed; only one reusable pickup location is used for every move.
-
-## Files added at the repository root
-
-- `main.m`: interactive entrypoint (mode selection + run loop)
-- `init.m` / `connectRobot.m`: hardware/session setup
-- `getGameboard.m` / `transform.m` / `matrix.m` / `visualise.m`: board capture and detection pipeline
-- `waitForOpponentMove.m`: debounce-based board-change detection
-- `executeTurn.m`: turn execution (auto and manual selection paths)
-- `runPickupSequence.m`: shared pickup sequence using vacuum gripper (`initPos`/`grabPos` poses from `init.m`)
-- `minimax.m` / `checkWinCondition.m`: gameplay intelligence and terminal checks
-- `endGame.m`: safe shutdown and final board-state reporting
-
-## How to run
-
-From MATLAB at the project root:
-
-```matlab
-main
-```
-
-At startup you will be asked (invalid text or out-of-range numbers are rejected; press Enter for each default):
-1. Autonomous or manual play (`0` / `1`)
-2. Robot starts first or opponent starts first (`0` / `1`)
-3. Whether to show CV intermediate stages (`0` / `1`)
-4. CV stage delay in seconds (non-negative number)
-5. **Robot color on the board** — `1` if the robot’s pieces are **red** in vision (`matrix` label 1), or `2` if the robot’s pieces are **blue** (label 2). Minimax and win detection use this; the opponent is the other color.
-
-Manual column entry accepts only integers **1–7**; letters, decimals, or out-of-range values get a short error and a new prompt.
-
-If robot is selected as starter, the first turn runs immediately.
-If opponent is selected, the game waits for a detected board change before the robot turn.
-
-If CV demo is enabled, intermediate frames are shown with the requested delay.  
-If disabled, only the final board rendering is shown.
-
-## Robot setup: recording poses before a full run
-
-To tune or replace the joint poses in `init.m` for your cell layout and pickup point:
-
-1. **Connect from MATLAB** — run `connectRobot.m` once (from the Command Window is fine). Variables **`robot`** and **`vacuumGrip`** appear in the **base workspace**; read poses with `robot.actualJointPositions` there.
-2. **Jog with the teach pendant** — move the arm to each pose you need (standby, pickup hover, grab, each column approach, each drop, and so on).
-3. **Read joint angles in MATLAB** — in the Command Window, after each physical pose:
+1. Run **`connectRobot.m`**. **`robot`** and **`vacuumGrip`** appear in the base workspace.
+2. Jog with the teach pendant to each waypoint (standby, pickup hover, grab, column transitions, drops, after-drop clears, etc.).
+3. After each physical pose, in the Command Window:
 
    ```matlab
    robot.actualJointPositions
    ```
 
-   This returns the six actual joint angles in **radians**, matching the vectors already used in `init.m` (`topPos`, `bottomPos`, `initPos`, `grabPos`, `colTPos`, `colPos`).
+   Values are **radians**, 1×6, matching the vectors in **`init.m`** (`topPos`, `bottomPos`, `initPos`, `grabPos`, `colTPos`, `colPos`, **`colAPos`**, …). Paste each row into the matching variable.
 
-4. **Copy into `init.m`** — paste each 1×6 row into the appropriate variable. Use `rad2deg(robot.actualJointPositions)` only if you prefer to think in degrees while noting values; the code expects radians in those arrays.
+You do not need **`main`** for this — only **`connectRobot`**, the pendant, and the Command Window.
 
-Repeat for every waypoint you need. You do not need to run `main` for this workflow—only `connectRobot.m` plus teach-pendant moves and recording from the terminal.
+### Launch (`main`)
 
-## Where to set/adjust variables for another robot
+```matlab
+cd <path-to-this-repo>
+main
+```
 
-This file is your main setup surface for position and hardware tuning:
+Prompts (invalid input is rejected; Enter uses each default shown in **`main.m`**):
 
-1. `main.m`: runtime and mode behavior
-   - `CAMERA_DEVICE` (camera source ID)
-   - `OPPONENT_POLL_DELAY` (board-polling interval)
-   - `MOVE_STEP_DELAY` (robot movement timing between waypoints)
-   - `CV_DEMO_DELAY` (only used when CV demo is enabled)
+| # | Question | Values |
+|---|----------|--------|
+| 1 | Play mode | `1` autonomous, `0` manual |
+| 2 | Who starts | `1` robot first, `0` opponent first |
+| 3 | CV demo | `1` on (figure 2 montage), `0` board only |
+| 4 | Robot colour in vision | `1` red (`matrix` label 1), `2` blue (label 2) — minimax and win checks use this |
 
-2. `init.m`: all robot joint-space pose constants
-   - `topPos`: standby/upper transition
-   - `bottomPos`: pre-pick transition
-   - `initPos`: shared pre-grab hover pose
-   - `grabPos`: shared grab/engage pose
-   - `colTPos`: per-column transition poses above the target slot
-   - `colPos`: per-column drop poses for each column
+Manual column entry: integers **1–7** only.
 
-3. `connectRobot.m`: connection details
-   - `host`: robot controller IP
-   - `rtdeport`: RTDE control port
-   - `vacuumport`: vacuum gripper port
-   - Creates **`vacuumGrip = vacuum(host, vacuumport)`** in the workspace (class name stays `vacuum`).
+- Robot starts first (`1`) → first robot turn runs immediately.  
+- Opponent starts (`0`) → loop waits for a **detected board change** after their move.
 
-4. `runPickupSequence.m`: pickup procedure (script name must differ from the `initPos` pose vector)
-   - Uses joint poses `initPos` then `grabPos` from `init.m`; keep this sequence for all puck sources.
+Optional pause after each CV montage: set **`CV_DEMO_DELAY`** in **`main.m`** (seconds; **`0`** = no pause).
 
-To retune for another robot:
-1. update pose vectors in `init.m` first,
-2. verify `CAMERA_DEVICE`,
-3. verify robot/gripper ports in `connectRobot.m`,
-4. validate the flow in manual mode before enabling autonomous play.
+## Figures
+
+| Figure | Role |
+|--------|------|
+| **1** | Board circles (`visualise.m`), title **Board** |
+| **2** | CV montage when demo is on: raw, warped, red/blue masks, R vs B, soft scores — **one window** (`matrix.m`). Optional `pause` only if `CV_DEMO_DELAY` > 0 in `main.m`. Off → figure 1 only. |
+
+During debounced polling (`CV_QUIET`), figure 2 is not updated.
+
+## Game loop
+
+1. Capture board (`getGameboard` → `transform` → `matrix` → `visualise`)  
+2. Wait for opponent move when it is their turn (`waitForOpponentMove`, debounced)  
+3. Choose column (minimax or prompt) and `executeTurn`  
+4. Win / tie / exit via `endGame`
+
+## Workspace model (no `global`)
+
+`main.m` and the files it chains (`init`, `connectRobot`, `getGameboard`, `transform`, `matrix`, `executeTurn`, …) are **scripts**. They share the **base workspace** (like one long script split across files).
+
+`matrix`, `getGameboard`, and `waitForOpponentMove` stay as scripts so they see `robot`, `board`, `SHOW_CV_DEMO`, etc. without threading arguments through everything.
+
+The gripper variable is **`vacuumGrip`** (`vacuumGrip = vacuum(host, vacuumport)`) so it does not shadow the **`vacuum`** class name.
+
+## Robot motion (single pickup pose)
+
+Shared pickup: **`initPos`** (hover) → **`grabPos`** (engage). After grab: **`colTPos`** (above column) → **`colPos`** (drop) → release → **`colAPos(column,:)`** (clear the slot) → **`topPos`**. One pickup location for every move (no multi-dispenser indexing).
+
+## Key files
+
+| File | Purpose |
+|------|---------|
+| `main.m` | Entry: prompts, loop, `MINIMAX_DEPTH`, `CAMERA_DEVICE`, `OPPONENT_POLL_DELAY`, `MOVE_STEP_DELAY`, `CV_DEMO_DELAY` |
+| `init.m` | Joint pose rows (`topPos`, `bottomPos`, `initPos`, `grabPos`, `colTPos`, `colPos`, `colAPos`, …) |
+| `connectRobot.m` | `host`, `rtdeport`, `vacuumport`; builds `robot`, `vacuumGrip` |
+| `getGameboard.m` | Orchestrates capture + detect + draw |
+| `transform.m` | Webcam, ArUco warp / resize fallback, optional `cvRawImg` for demo |
+| `matrix.m` | Colour thresholds, occupancy grid |
+| `visualise.m` | Figure 1 board |
+| `waitForOpponentMove.m` | Debounced board-change wait |
+| `executeTurn.m` | Auto / manual paths |
+| `runPickupSequence.m` | Shared pickup using `initPos` / `grabPos` |
+| `minimax.m`, `checkWinCondition.m` | Search and terminal state |
+| `endGame.m` | Shutdown and final state |

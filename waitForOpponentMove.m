@@ -1,4 +1,4 @@
-% Uses prevBoard, OPPONENT_POLL_DELAY, SHOW_CV_DEMO, CV_DEMO_DELAY from workspace.
+% Uses prevBoard, OPPONENT_POLL_DELAY from workspace.
 
 disp('Waiting for opponent move...');
 
