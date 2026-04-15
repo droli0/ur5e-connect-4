@@ -1,9 +1,0 @@
-function [x, y] = getCoordinate(index, numRows, numCols, deltaRows, deltaCols)
-    % Calculate row and column based on the index
-    row = floor(index / numCols);
-    col = mod(index, numCols);
-
-    % Calculate x and y coordinates
-    x = col * deltaCols;
-    y = row * deltaRows;
-end
